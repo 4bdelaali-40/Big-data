@@ -1,0 +1,25 @@
+k_E2_RIyKzNTB8jPOXugj7udFo8CCw
+
+client id : SGplXeyDmX4I5DNzKYxoZA
+client secret : 1GSYsap5_kwdpJ923JEJV_5BBD0WRg
+
+Order d'execution
+
+# 1. Lance Zookeeper (coordinateur pour Kafka)
+zookeeper-server-start.sh → Port 2181
+C:/kafka/zookeeper
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+# 2. Lance Kafka Server (message broker)
+kafka-server-start.sh → Port 9092
+C:/kafka/kafka-logs
+.\bin\windows\kafka-server-start.bat .\config\server.properties
+
+# 3. Crée le topic "twitter-topic"
+kafka-topics.sh --create --topic twitter-topic
+
+# 4. Lance Elasticsearch (moteur de recherche)
+elasticsearch → Port 9200
+
+# 5. Lancer Django
+python manage.py runserver

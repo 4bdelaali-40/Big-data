@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Analysis Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24, #ff9ff3);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .status-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .status-bar i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .status-bar.success { 
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+        .status-bar.warning { 
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        .status-bar.error { 
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .controls {
+            padding: 25px;
+            background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+            text-align: center;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn.test {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn.test:hover {
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3498db, #9b59b6, #e74c3c);
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card h3 i {
+            font-size: 1.5rem;
+            color: #3498db;
+        }
+        
+        .stat-number {
+            font-size: 4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3498db, #9b59b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-description {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .chart-container {
+            height: 350px;
+            position: relative;
+            margin-top: 20px;
+        }
+        
+        .sentiment-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .sentiment-item {
+            background: linear-gradient(135deg, #ffffff, #f1f2f6);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .sentiment-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+        }
+        
+        .sentiment-item.positive {
+            border-color: #2ecc71;
+        }
+        
+        .sentiment-item.negative {
+            border-color: #e74c3c;
+        }
+        
+        .sentiment-item.neutral {
+            border-color: #f39c12;
+        }
+        
+        .sentiment-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .sentiment-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .sentiment-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .positive .sentiment-icon { color: #2ecc71; }
+        .positive .sentiment-number { color: #27ae60; }
+        
+        .negative .sentiment-icon { color: #e74c3c; }
+        .negative .sentiment-number { color: #c0392b; }
+        
+        .neutral .sentiment-icon { color: #f39c12; }
+        .neutral .sentiment-number { color: #e67e22; }
+        
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        .hashtag-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .hashtag-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            margin: 5px 0;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .hashtag-item:hover {
+            background: linear-gradient(135deg, #e9ecef, #dee2e6);
+            transform: translateX(5px);
+        }
+        
+        .hashtag-tag {
+            font-weight: 600;
+            color: #3498db;
+        }
+        
+        .hashtag-count {
+            background: #3498db;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .refresh-animation {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .last-update {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(127, 140, 141, 0.1);
+            border-radius: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            .sentiment-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                display: block;
+                margin: 10px auto;
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fab fa-reddit"></i> Reddit Analysis Dashboard</h1>
+            <p>Analyse en temps réel des posts Reddit</p>
+        </div>
+        
+        <div id="status-bar" class="status-bar">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span id="status-text">Chargement des données...</span>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="updateStats()">
+                <i class="fas fa-sync-alt" id="refresh-icon"></i>
+                Actualiser les données
+            </button>
+            <button class="btn test" onclick="testElasticsearch()">
+                <i class="fas fa-database"></i>
+                Tester Elasticsearch
+            </button>
+        </div>
+        
+        <div class="stats">
+            <!-- Statistiques Générales -->
+            <div class="card">
+                <h3><i class="fas fa-chart-line"></i> Statistiques Générales</h3>
+                <div class="stat-number" id="total-posts">0</div>
+                <div class="stat-description">Posts Reddit analysés</div>
+                <div class="last-update" id="last-update">
+                    Dernière mise à jour: <span id="update-time">--:--</span>
+                </div>
+            </div>
+            
+            <!-- Analyse des Sentiments avec Détails -->
+            <div class="card">
+                <h3><i class="fas fa-heart"></i> Analyse des Sentiments</h3>
+                <div class="sentiment-stats">
+                    <div class="sentiment-item positive">
+                        <div class="sentiment-icon">+</div>
+                        <div class="sentiment-number" id="positive-count">0</div>
+                        <div class="sentiment-label">Positif</div>
+                    </div>
+                    <div class="sentiment-item negative">
+                        <div class="sentiment-icon">-</div>
+                        <div class="sentiment-number" id="negative-count">0</div>
+                        <div class="sentiment-label">Négatif</div>
+                    </div>
+                    <div class="sentiment-item neutral">
+                        <div class="sentiment-icon"></div>
+                        <div class="sentiment-number" id="neutral-count">0</div>
+                        <div class="sentiment-label">Neutre</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Top Hashtags -->
+            <div class="card">
+                <h3><i class="fas fa-hashtag"></i> Hashtags Populaires</h3>
+                <div class="chart-container">
+                    <canvas id="hashtagsChart"></canvas>
+                </div>
+                <div class="hashtag-list" id="hashtag-list">
+                    <!-- Les hashtags seront ajoutés ici dynamiquement -->
+                </div>
+            </div>
+            
+            <!-- Graphique en Barres des Sentiments -->
+            <div class="card">
+                <h3><i class="fas fa-chart-bar"></i> Répartition des Sentiments</h3>
+                <div class="chart-container">
+                    <canvas id="sentimentBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let hashtagsChart = null;
+        let sentimentChart = null;
+        let sentimentBarChart = null;
+        
+        function updateStatusBar(status, message, icon = 'fas fa-info-circle') {
+            const statusBar = document.getElementById('status-bar');
+            const statusText = document.getElementById('status-text');
+            
+            statusBar.className = `status-bar ${status}`;
+            statusBar.innerHTML = `<i class="${icon}"></i><span>${message}</span>`;
+        }
+        
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('fr-FR');
+            document.getElementById('update-time').textContent = timeString;
+        }
+        
+        function createHashtagList(hashtags) {
+            const hashtagList = document.getElementById('hashtag-list');
+            hashtagList.innerHTML = '';
+            
+            hashtags.forEach(hashtag => {
+                const item = document.createElement('div');
+                item.className = 'hashtag-item';
+                item.innerHTML = `
+                    <span class="hashtag-tag">${hashtag.tag}</span>
+                    <span class="hashtag-count">${hashtag.count}</span>
+                `;
+                hashtagList.appendChild(item);
+            });
+        }
+        
+        function updateStats() {
+            const refreshIcon = document.getElementById('refresh-icon');
+            refreshIcon.classList.add('refresh-animation');
+            
+            updateStatusBar('', 'Actualisation des données...', 'fas fa-spinner fa-spin');
+            
+            fetch('/api/stats/')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Données reçues:', data);
+                    
+                    // Mettre à jour le statut
+                    if (data.status === 'success') {
+                        updateStatusBar('success', 'Données mises à jour avec succès', 'fas fa-check-circle');
+                    } else if (data.status === 'elasticsearch_offline') {
+                        updateStatusBar('warning', 'Elasticsearch hors ligne - Affichage des données de test', 'fas fa-exclamation-triangle');
+                    } else {
+                        updateStatusBar('warning', 'Données partielles chargées', 'fas fa-exclamation-triangle');
+                    }
+                    
+                    // Mettre à jour les statistiques
+                    document.getElementById('total-posts').textContent = data.total_posts;
+                    document.getElementById('positive-count').textContent = data.sentiments.positive;
+                    document.getElementById('negative-count').textContent = data.sentiments.negative;
+                    document.getElementById('neutral-count').textContent = data.sentiments.neutral;
+                    
+                    updateLastUpdateTime();
+                    
+                    // Créer la liste des hashtags
+                    createHashtagList(data.hashtags);
+                    
+                    // Graphique des hashtags
+                    if (hashtagsChart) {
+                        hashtagsChart.destroy();
+                    }
+                    
+                    const hashtagsCtx = document.getElementById('hashtagsChart').getContext('2d');
+                    hashtagsChart = new Chart(hashtagsCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.hashtags.map(h => h.tag),
+                            datasets: [{
+                                data: data.hashtags.map(h => h.count),
+                                backgroundColor: [
+                                    '#3498db', '#e74c3c', '#2ecc71', '#f39c12', 
+                                    '#9b59b6', '#1abc9c', '#34495e', '#e67e22',
+                                    '#ff6b6b', '#4ecdc4'
+                                ],
+                                borderWidth: 3,
+                                borderColor: '#ffffff',
+                                hoverBorderWidth: 5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        usePointStyle: true,
+                                        padding: 20,
+                                        font: {
+                                            size: 12,
+                                            weight: 'bold'
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `${context.label}: ${context.parsed} posts`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Graphique circulaire des sentiments
+                    if (sentimentChart) {
+                        sentimentChart.destroy();
+                    }
+                    
+                    const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+                    sentimentChart = new Chart(sentimentCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Positif', 'Négatif', 'Neutre'],
+                            datasets: [{
+                                data: [
+                                    data.sentiments.positive, 
+                                    data.sentiments.negative, 
+                                    data.sentiments.neutral
+                                ],
+                                backgroundColor: ['#2ecc71', '#e74c3c', '#f39c12'],
+                                borderWidth: 4,
+                                borderColor: '#ffffff',
+                                hoverBorderWidth: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        usePointStyle: true,
+                                        padding: 15,
+                                        font: {
+                                            size: 11,
+                                            weight: 'bold'
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                            return `${context.label}: ${context.parsed} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Graphique en barres des sentiments
+                    if (sentimentBarChart) {
+                        sentimentBarChart.destroy();
+                    }
+                    
+                    const sentimentBarCtx = document.getElementById('sentimentBarChart').getContext('2d');
+                    sentimentBarChart = new Chart(sentimentBarCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Positif', 'Négatif', 'Neutre'],
+                            datasets: [{
+                                label: 'Nombre de posts',
+                                data: [
+                                    data.sentiments.positive, 
+                                    data.sentiments.negative, 
+                                    data.sentiments.neutral
+                                ],
+                                backgroundColor: [
+                                    'rgba(46, 204, 113, 0.8)',
+                                    'rgba(231, 76, 60, 0.8)',
+                                    'rgba(243, 156, 18, 0.8)'
+                                ],
+                                borderColor: [
+                                    '#2ecc71',
+                                    '#e74c3c',
+                                    '#f39c12'
+                                ],
+                                borderWidth: 2,
+                                borderRadius: 10,
+                                borderSkipped: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `${context.label}: ${context.parsed.y} posts`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    updateStatusBar('error', 'Erreur lors du chargement des données', 'fas fa-exclamation-circle');
+                })
+                .finally(() => {
+                    refreshIcon.classList.remove('refresh-animation');
+                });
+        }
+        
+        function testElasticsearch() {
+            updateStatusBar('', 'Test de connexion Elasticsearch...', 'fas fa-spinner fa-spin');
+            
+            fetch('/api/test-es/')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Test ES:', data);
+                    
+                    if (data.status === 'success') {
+                        updateStatusBar('success', 
+                            `Elasticsearch connecté - ${data.document_count} documents indexés`, 
+                            'fas fa-check-circle');
+                    } else if (data.status === 'warning') {
+                        updateStatusBar('warning', data.message, 'fas fa-exclamation-triangle');
+                    } else {
+                        updateStatusBar('error', 
+                            data.message || 'Elasticsearch inaccessible', 
+                            'fas fa-times-circle');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur test ES:', error);
+                    updateStatusBar('error', 'Erreur lors du test Elasticsearch', 'fas fa-times-circle');
+                });
+        }
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            
+            // Mise à jour automatique toutes les 30 secondes
+            setInterval(updateStats, 30000);
+        });
+    </script>
+</body>
+</html>
