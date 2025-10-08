@@ -295,7 +295,7 @@ elasticsearch.bat
 # Linux/Mac
 ./elasticsearch
 ```
-**✅ Vérifiez:** Ouvrez http://localhost:9200 dans votre navigateur
+** Vérifiez:** Ouvrez http://localhost:9200 dans votre navigateur
 
 ---
 
@@ -309,7 +309,7 @@ zookeeper-server-start.bat ../config/zookeeper.properties
 
 .\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
 
-**✅ Vérifiez:** Aucune erreur dans les logs
+** Vérifiez:** Aucune erreur dans les logs
 
 ---
 
@@ -322,7 +322,7 @@ kafka-server-start.bat ../config/server.properties
 
 .\bin\windows\kafka-server-start.bat .\config\server.properties
 
-**✅ Vérifiez:** Aucune erreur dans les logs
+** Vérifiez:** Aucune erreur dans les logs
 
 ---
 
@@ -334,7 +334,7 @@ cd /chemin/vers/votre/projet
 # Configurez l'index Elasticsearch
 python elasticsearch_config.py
 ```
-**✅ Vérifiez:** Message "Index créé avec succès"
+** Vérifiez:** Message "Index créé avec succès"
 
 ---
 
@@ -347,7 +347,7 @@ python manage.py migrate
 # Démarrer le serveur
 python manage.py runserver
 ```
-**✅ Vérifiez:** Ouvrez http://localhost:8000
+** Vérifiez:** Ouvrez http://localhost:8000
 
 ---
 
@@ -356,7 +356,7 @@ python manage.py runserver
 # ATTENTION: Configurez d'abord vos clés Reddit API dans kafka_producer.py
 python kafka_producer.py
 ```
-**✅ Vérifiez:** Messages "Envoyé:" dans la console
+** Vérifiez:** Messages "Envoyé:" dans la console
 
 ---
 
@@ -372,7 +372,7 @@ set PATH=%PATH%;C:\hadoop\bin
 spark-submit --conf spark.pyspark.python="python" --conf spark.pyspark.driver.python="python" --conf spark.sql.warehouse.dir="file:///C:/tmp/spark-warehouse" --conf spark.sql.streaming.checkpointLocation="file:///C:/tmp/checkpoint" --conf spark.hadoop.fs.file.impl=org.apache.hadoop.fs.LocalFileSystem --packages org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.0 spark_consumer.py
 
 ```
-**✅ Vérifiez:** Messages "Consumer Spark démarré..."
+** Vérifiez:** Messages "Consumer Spark démarré..."
 
 ---
 
